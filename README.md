@@ -44,13 +44,13 @@ flashcard-saas/
 └── next.config.js
 ```
 
-Getting Started
-Prerequisites
+# Getting Started
+## Prerequisites
 
 - Node.js: Ensure you have Node.js (LTS version) installed. You can download it here.
 - npm: npm is included with Node.js.
 
-Installation
+## Installation
 
 1.Clone the Repository:
 
@@ -82,15 +82,15 @@ CLERK_API_KEY=your_clerk_api_key
 
 The application will be accessible at http://localhost:3000.
 
-Deployment
+# Deployment
 You can deploy the application using Vercel, which provides a seamless deployment experience for Next.js applications.
 
 1. Push your code to a GitHub repository.
 2. Link the repository to Vercel and deploy.
 
-Usage
+# Usage
 
-Generate Flashcards
+## Generate Flashcards
 
 1. Sign in to the application.
 2. Navigate to the "Generate" page.
@@ -98,19 +98,19 @@ Generate Flashcards
 4. Click "Generate Flashcards."
 5. Review the generated flashcards and save them to your account.
 
-Review Saved Flashcards
+## Review Saved Flashcards
 
 1. Sign in to the application.
 2. Navigate to the "Flashcards" page.
 3. Click on any saved flashcard set to review and interact with the flashcards.
 
-Manage Subscription
+## Manage Subscription
 
 1. Sign in to the application.
 2. Navigate to the "Pricing" section on the home page.
 3. Select a subscription plan and proceed with the payment using Stripe.
 
-Technologies Used
+## Technologies Used
 
 - Next.js: React framework for building the frontend.
 - Firebase: Backend as a service for database and authentication.
