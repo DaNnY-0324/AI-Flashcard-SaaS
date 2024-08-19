@@ -1,3 +1,5 @@
+"use client";
+
 import getStripe from "@/utils/get-stripe";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import {
@@ -12,15 +14,45 @@ import {
 import Head from "next/head";
 
 export default function Home() {
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch("/api/checkout_sessions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: "http://localhost:3000", // This is typically not set like this in client-side code
+        },
+      });
+
+      const checkoutSessionJSON = await response.json();
+
+      if (!response.ok) {
+        console.error("Error with checkout session", checkoutSessionJSON);
+        return;
+      }
+
+      const stripe = await getStripe();
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: checkoutSessionJSON.id, // Assuming the session ID is returned as 'id'
+      });
+
+      if (error) {
+        console.error("Stripe error:", error.message);
+      }
+    } catch (error) {
+      console.error("Error during checkout:", error.message);
+    }
+  };
+
   return (
-    <Container maxWidth="200vw">
+    <Container maxWidth="lg">
       <Head>
         <title>Flashcard SaaS</title>
         <meta name="description" content="Create flashcard from your text" />
       </Head>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" style={{ flexGrow: 1 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Flashcard SaaS
           </Typography>
           <SignedOut>
@@ -36,19 +68,19 @@ export default function Home() {
           </SignedIn>
         </Toolbar>
       </AppBar>
-      <Box
-        sx={{
-          textAlign: "center",
-          my: 4,
-        }}
-      >
+      <Box sx={{ textAlign: "center", my: 4 }}>
         <Typography variant="h2" gutterBottom>
           Welcome to Flashcard SaaS
         </Typography>
         <Typography variant="h5" gutterBottom>
           The easiest way to create flashcard from your text
         </Typography>
-        <Button variant="contained" color="primary" sx={{ mt: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{ mt: 2 }}
+          onClick={handleSubmit}
+        >
           Get Started
         </Button>
       </Box>
@@ -62,9 +94,8 @@ export default function Home() {
               Easy Text Input
             </Typography>
             <Typography>
-              {" "}
               Simply input your text and let our software do the rest. Creating
-              flashcards has been easier.
+              flashcards has never been easier.
             </Typography>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -72,7 +103,6 @@ export default function Home() {
               Smart Flashcards
             </Typography>
             <Typography>
-              {" "}
               Our AI intelligence breaks down your text into concise flashcards,
               perfect for studying.
             </Typography>
@@ -82,7 +112,6 @@ export default function Home() {
               Accessible Anywhere
             </Typography>
             <Typography>
-              {" "}
               Access your flashcards from any device, at any time. Study on the
               go with ease.
             </Typography>
@@ -106,8 +135,7 @@ export default function Home() {
               <Typography variant="h5">Basic</Typography>
               <Typography variant="h6">$5 / Month</Typography>
               <Typography>
-                {" "}
-                Access to basic flashcard feautures and limited storage.
+                Access to basic flashcard features and limited storage.
               </Typography>
               <Button variant="contained" color="primary" sx={{ mt: 2 }}>
                 Choose Basic
@@ -126,38 +154,20 @@ export default function Home() {
               <Typography variant="h5">Pro</Typography>
               <Typography variant="h6">$10 / Month</Typography>
               <Typography>
-                {" "}
                 Unlimited flashcards and storage, with primary support.
               </Typography>
-              <Button variant="contained" color="primary" sx={{ mt: 2 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ mt: 2 }}
+                onClick={handleSubmit}
+              >
                 Choose Pro
               </Button>
             </Box>
           </Grid>
         </Grid>
       </Box>
-
-      {/* Potentially add Premium */}
-      {/* <Grid item xs={12} md={6} sx={{ textAlign: "center" }}>
-          <Box
-            sx={{
-              p: 3,
-              border: "1px solid",
-              borderColor: "grey.300",
-              borderRadius: 2,
-            }}
-          >
-            <Typography variant="h5">Premium</Typography>
-            <Typography variant="h6">$15 / Month</Typography>
-            <Typography>
-              {" "}
-              Access to basic flashcard feautures and limited storage.
-            </Typography>
-            <Button variant="contained" color="primary" sx={{ mt: 2 }}>
-              Choose Premium
-            </Button>
-          </Box>
-        </Grid> */}
     </Container>
   );
 }

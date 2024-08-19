@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { collection, doc, getDoc, writeBatch } from "firebase/firestore";
-import { db } from "@/firebase";
+import {
+  doc,
+  collection,
+  setDoc,
+  getDoc,
+  writeBatch,
+} from "firebase/firestore";
+import { db } from "/firebase";
 import {
   Box,
   Button,
@@ -22,6 +25,9 @@ import {
   Paper,
   Card,
 } from "@mui/material";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 
 export default function Generate() {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -31,6 +37,11 @@ export default function Generate() {
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleSubmit = async () => {
     fetch("/api/generate", {
@@ -62,7 +73,9 @@ export default function Generate() {
       return;
     }
     const batch = writeBatch(db);
-    const userDocRef = doc(collection(db, "users"), user.uid);
+    const userDocRef = doc(collection(db, "users"), user.id);
+
+    // Use getDoc to fetch the document
     const docSnap = await getDoc(userDocRef);
 
     if (docSnap.exists()) {
@@ -77,14 +90,16 @@ export default function Generate() {
     } else {
       batch.set(userDocRef, { flashcards: [{ name }] });
     }
-    const colRef = collection(db, "users", user.uid, name);
+    const colRef = collection(userDocRef, name);
     flashcards.forEach((flashcard) => {
       const cardDocRef = doc(colRef);
       batch.set(cardDocRef, flashcard);
     });
     await batch.commit();
     handleClose();
-    router.push("/flashcards");
+    if (isClient) {
+      router.push("/flashcards");
+    }
   };
 
   return (
@@ -120,6 +135,7 @@ export default function Generate() {
           </Button>
         </Paper>
       </Box>
+
       {flashcards.length > 0 && (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5">Flashcards Preview</Typography>
@@ -127,21 +143,26 @@ export default function Generate() {
             {flashcards.map((flashcard, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
                 <CardActionArea onClick={() => handleCardClick(index)}>
-                  <CardContent>
+                  <Box
+                    sx={{
+                      perspective: "1000px",
+                    }}
+                  >
                     <Box
                       sx={{
-                        perspective: "1000px",
-                        "& > div": {
-                          position: "relative",
-                          width: "100%",
-                          height: "200px",
-                          transition: "transform 0.6s",
-                          transformStyle: "preserve-3d",
-                          transform: flipped[index]
-                            ? "rotateY(180deg)"
-                            : "rotateY(0deg)",
-                        },
-                        "& > div > div": {
+                        position: "relative",
+                        width: "100%",
+                        height: "200px",
+                        transformStyle: "preserve-3d",
+                        transition: "transform 0.6s",
+                        transform: flipped[index]
+                          ? "rotateY(180deg)"
+                          : "rotateY(0deg)",
+                      }}
+                    >
+                      {/* Front Side */}
+                      <CardContent
+                        sx={{
                           position: "absolute",
                           width: "100%",
                           height: "100%",
@@ -150,28 +171,37 @@ export default function Generate() {
                           justifyContent: "center",
                           alignItems: "center",
                           flexDirection: "column",
-                          padding: 2,
-                          boxSizing: "border-box",
-                        },
-                        "& > div > .back": {
+                          bgcolor: "white",
+                          borderRadius: "8px",
+                        }}
+                      >
+                        <Typography variant="h5" component="div">
+                          {flashcard.front}
+                        </Typography>
+                      </CardContent>
+
+                      {/* Back Side */}
+                      <CardContent
+                        sx={{
+                          position: "absolute",
+                          width: "100%",
+                          height: "100%",
+                          backfaceVisibility: "hidden",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          flexDirection: "column",
+                          bgcolor: "lightgray",
+                          borderRadius: "8px",
                           transform: "rotateY(180deg)",
-                        },
-                      }}
-                    >
-                      <div>
-                        <div className="front">
-                          <Typography variant="h5" component="div">
-                            {flashcard.front}
-                          </Typography>
-                        </div>
-                        <div className="back">
-                          <Typography variant="h5" component="div">
-                            {flashcard.back}
-                          </Typography>
-                        </div>
-                      </div>
+                        }}
+                      >
+                        <Typography variant="h5" component="div">
+                          {flashcard.back}
+                        </Typography>
+                      </CardContent>
                     </Box>
-                  </CardContent>
+                  </Box>
                 </CardActionArea>
               </Grid>
             ))}
